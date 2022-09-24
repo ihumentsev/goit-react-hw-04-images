@@ -1,0 +1,7 @@
+.container {
+    text-align: center;
+}
+.loding {
+    display: flex;
+    justify-content: center;
+}
