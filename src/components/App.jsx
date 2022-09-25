@@ -15,11 +15,6 @@ export default class App extends Component {
   state = {
     searchImg: '',
     images: [],
-    response: {
-      hits: [],
-      total: null,
-      totalHits: null,
-    },
     page: 1,
     status: 'idle',
     showModal: false,
@@ -64,9 +59,8 @@ export default class App extends Component {
         .fetchImg(this.state.searchImg, this.state.page)
         .then(response =>
           this.setState({
-            images: [...response.hits],
+            images: [...prevState.images, ...response.hits],
             status: 'resolved',
-            response: response,
           })
         )
         .catch(error => this.setState({ error, status: 'rejected' }));
