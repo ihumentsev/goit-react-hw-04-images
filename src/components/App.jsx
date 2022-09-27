@@ -1,4 +1,4 @@
-import { Component } from 'react';
+import { useState, useEffect } from 'react';
 import { Blocks } from 'react-loader-spinner';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -11,107 +11,89 @@ import Button from './Button/Button';
 import { toast } from 'react-toastify';
 import css from './App.module.css';
 
-export default class App extends Component {
-  state = {
-    searchImg: '',
-    images: [],
-    page: 1,
-    status: 'idle',
-    showModal: false,
-    error: null,
-    propsModal: null,
+export default function App() {
+  const [searchImg, setSearchImg] = useState('');
+  const [images, setImages] = useState([]);
+  const [page, setPage] = useState(1);
+  const [status, setStatus] = useState('idle');
+  const [showModal, setShowModal] = useState(false);
+  const [error, setError] = useState(null);
+  const [propsModal, setPropsModal] = useState(null);
+
+  const handeleFormSubmit = searchImg => {
+    setSearchImg(searchImg);
+    setPage(1);
   };
 
-  handeleFormSubmit = searchImg => {
-    this.setState({ searchImg, page: 1 });
+  const toggleModal = propsModal => {
+    setShowModal(!showModal);
+    setPropsModal(propsModal);
   };
 
-  toggleModal = propsModal => {
-    this.setState(({ showModal }) => ({ showModal: !showModal, propsModal }));
-  };
-
-  LoadMore = () => {
-    if (this.state.images.length < 12) {
+  const LoadMore = () => {
+    if (images.length < 1) {
       toast('Wow so easy!');
     } else {
-      this.setState(prevState => ({
-        status: 'pending',
-        page: prevState.page + 1,
-      }));
+      setStatus('pending');
+      setPage(page + 1);
     }
   };
 
-  handlerKeyEsc = event => {
-    if (event.code === 'Escape') {
-      this.toggleModal();
+  useEffect(() => {
+    if (searchImg === '') return;
+    try {
+      imgAPI.fetchImg(searchImg, page).then(response => {
+        if (response.hits.length < 1) {
+          toast('Wow so easy!');
+        }
+        if (page !== 1) {
+          setImages(images => [...images, ...response.hits]);
+        } else {
+          setImages([...response.hits]);
+        }
+      });
+    } catch (error) {
+      alert('Data EROR');
+    } finally {
+      setTimeout(() => {
+        setStatus('resolved');
+      }, 500);
     }
-  };
-  componentDidMount() {
-    window.addEventListener('keydown', this.handlerKeyEsc);
+  }, [page, searchImg]);
+
+  if (status === 'idle') {
+    return <Searchbar handeleFormSubmit={handeleFormSubmit} />;
   }
-  componentDidUpdate(prevProps, prevState) {
-    if (
-      this.state.searchImg !== prevState.searchImg ||
-      this.state.page !== prevState.page
-    ) {
-      this.setState({ status: 'pending' });
-      imgAPI
-        .fetchImg(this.state.searchImg, this.state.page)
-        .then(response =>
-          this.setState({
-            images: [...prevState.images, ...response.hits],
-            status: 'resolved',
-          })
-        )
-        .catch(error => this.setState({ error, status: 'rejected' }));
-    }
+  if (status === 'pending') {
+    return (
+      <div className={css.loding}>
+        <Blocks
+          className={css.loding}
+          visible={true}
+          height="150"
+          width="150"
+          ariaLabel="blocks-loading"
+          wrapperStyle={{}}
+          wrapperClass="blocks-wrapper"
+        />
+      </div>
+    );
   }
+  if (status === 'resolved') {
+    return (
+      <div className={css.container}>
+        <Searchbar handeleFormSubmit={handeleFormSubmit} />
+        <ImageGallery images={images} toggleModal={toggleModal}>
+          <ImageGalleryItem />
+        </ImageGallery>
+        <Button LoadMore={LoadMore} />
 
-  componentWillUnmount() {
-    window.removeEventListener('keydown', this.handlerKeyEsc);
-  }
+        {showModal && (
+          <Modal toggleModal={toggleModal} propsModal={propsModal} />
+        )}
 
-  render() {
-    const { status } = this.state;
-    if (status === 'idle') {
-      return <Searchbar onSubmit={this.handeleFormSubmit} />;
-    }
-    if (status === 'pending') {
-      return (
-        <div className={css.loding}>
-          <Blocks
-            visible={true}
-            height="150"
-            width="150"
-            ariaLabel="blocks-loading"
-            wrapperStyle={{}}
-            wrapperClass="blocks-wrapper"
-          />
-        </div>
-      );
-    }
-    if (status === 'resolved') {
-      return (
-        <div className={css.container}>
-          <Searchbar onSubmit={this.handeleFormSubmit} />
-          <ImageGallery
-            images={this.state.images}
-            toggleModal={this.toggleModal}
-          >
-            <ImageGalleryItem />
-          </ImageGallery>
-          <Button LoadMore={this.LoadMore} />
-
-          {this.state.showModal && (
-            <Modal
-              toggleModal={this.toggleModal}
-              propsModal={this.state.propsModal}
-            />
-          )}
-
-          <ToastContainer />
-        </div>
-      );
-    }
+        <ToastContainer />
+      </div>
+    );
   }
 }

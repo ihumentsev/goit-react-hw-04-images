@@ -5,7 +5,7 @@ import PropTypes from 'prop-types';
 export default function ImageGallery({ images, toggleModal }) {
   return (
     <ul className={css.ImageGallery}>
-      {images.map(({ id, tags, webformatURL, largeImageURL }) => (
+      {images?.map(({ id, tags, webformatURL, largeImageURL }) => (
         <ImageGalleryItem
           key={id}
           tags={tags}
