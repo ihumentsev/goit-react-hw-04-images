@@ -17,7 +17,7 @@ export default function App() {
   const [page, setPage] = useState(1);
   const [status, setStatus] = useState('idle');
   const [showModal, setShowModal] = useState(false);
-  const [error, setError] = useState(null);
+  // const [error, setError] = useState(null);
   const [propsModal, setPropsModal] = useState(null);
 
   const handeleFormSubmit = searchImg => {
